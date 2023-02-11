@@ -1,0 +1,10 @@
+version: '2'
+services:
+  runner0:
+    image: golang:1.20
+    restart: always
+    volumes:
+      - .:/code
+    ports:
+      - "80:80"
+    command: sh /code/entrypoint.sh
