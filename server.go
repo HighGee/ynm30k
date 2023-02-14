@@ -57,7 +57,7 @@ func (s *Server) Init(addr string, r *mux.Router) {
     <ul>%s
     </ul>
     <footer>
-        <hr/>SERVER-ID: %s, Powered by YNM30K <a href="https://gitlab.haiji.pro/haiji/ynm30k">Fork me</a> on Github
+        <hr/>SERVER-ID: %s, Powered by YNM30K Fork me on <a href="https://gitee.com/haiji_fsck/ynm30k">Gitee</a>/<a href="https://github.com/HighGee/ynm30k">Github</a>
     </footer>
 	`
 	s.tpls["/trace/"] = "%s %s %s\r\n%s\r\n\r\n"
