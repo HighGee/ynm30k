@@ -14,6 +14,29 @@ import (
 	mimetypes "github.com/whosonfirst/go-whosonfirst-mimetypes"
 )
 
+var Links = []string{
+	"/trace/",
+	"/static/abc.js",
+	"/static/abc/xyz.css",
+	"/static/abc/xyz/uvw.txt",
+	"/static/abc.html",
+	"/static/abc.jpg",
+	"/dynamic/abc.php",
+	"/dynamic/abc.asp",
+	"/code/200",
+	"/code/400",
+	"/code/404",
+	"/code/502",
+	"/size/11k.zip",
+	"/size/1k.bin",
+	"/headersize/16k",
+	"/slow/3",
+	"/slow/4-10",
+	"/redirect/301?url=http://www.haiji.pro",
+	"/redirect/302?url=http://www.haiji.pro",
+	"/redirect/js?url=http://www.haiji.pro",
+}
+
 type Server struct {
 	tpls             map[string]string
 	nodeID           string
@@ -41,28 +64,6 @@ func (s *Server) Init(addr string, r *mux.Router) {
 
 	s.nodeID = getNodeId()
 
-	Links := []string{
-		"/trace/",
-		"/static/abc.js",
-		"/static/abc/xyz.css",
-		"/static/abc/xyz/uvw.txt",
-		"/static/abc.html",
-		"/static/abc.jpg",
-		"/dynamic/abc.php",
-		"/dynamic/abc.asp",
-		"/code/200",
-		"/code/400",
-		"/code/404",
-		"/code/502",
-		"/size/11k.zip",
-		"/size/1k.bin",
-		"/headersize/16k",
-		"/slow/3",
-		"/slow/4-10",
-		"/redirect/301?url=http://haiji.io",
-		"/redirect/302?url=http://haiji.io",
-		"/redirect/js?url=http://haiji.io",
-	}
 	linkLinks := []string{}
 	for _, link := range Links {
 		linkLinks = append(linkLinks, fmt.Sprintf("<li><a href=\"%s\">%s</a></li>", link, link))
@@ -99,18 +100,14 @@ func (s *Server) FileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", mimetype)
 
 	cacheTimeInt := 10800
-	cacheTimeStr := "10800"
 	cacheHeaderStr := r.Header.Get("Cache")
-	if cacheHeaderStr != "" {
-		cacheHeaderInt, err := strconv.Atoi(cacheHeaderStr)
-		if err == nil {
-			cacheTimeStr = cacheHeaderStr
-			cacheTimeInt = cacheHeaderInt
-		}
+	cacheHeaderInt, err := strconv.Atoi(cacheHeaderStr)
+	if err == nil {
+		cacheTimeInt = cacheHeaderInt
 	}
 	now := time.Now().UTC().Add(time.Second * time.Duration(cacheTimeInt))
 	w.Header().Set("Expires", now.UTC().Format(s.headerTimeFormat))
-	w.Header().Set("Cache-Control", "max-age="+cacheTimeStr)
+	w.Header().Set("Cache-Control", fmt.Sprintf("max-age=%d", cacheTimeInt))
 	fmt.Fprint(w, r.URL.Path)
 }
 
@@ -248,15 +245,16 @@ func (s *Server) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	method := vars["method"]
 	args := r.URL.Query()
 	url := args["url"][0]
-	if method == "301" || method == "302" {
+	switch method {
+	case "301", "302":
 		code, _ := strconv.Atoi(method)
 		w.Header().Set("Location", url)
 		w.WriteHeader(code)
-	} else if method == "js" {
+	case "js":
 		fmt.Fprintf(w, "<script>location.href=\"%s\"</script>", url)
-	} else if method == "meta" {
+	case "meta":
 		fmt.Fprintf(w, "<meta http-equiv=\"refresh\" content=\"0; url=%s\" />", url)
-	} else {
+	default:
 		fmt.Fprint(w, "wrong argument")
 	}
 }
